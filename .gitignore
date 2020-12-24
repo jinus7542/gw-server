@@ -1,0 +1,8 @@
+#Ignore client app
+*.app
+
+.DS_Store
+
+#Ignore the build files
+__build/*/*/server*
+__build/*/*/client*

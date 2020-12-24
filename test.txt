@@ -1,9 +1,9 @@
 cd 1.gw-pre && sh cf.sh -s "stage" -r "us-east-1" && cd ..
-cd 2.gw-rest && sh sam.sh -s "stage" -r "us-east-1" && cd ..
+cd 2.gw-http && sh sam.sh -s "stage" -r "us-east-1" && cd ..
 cd 3.gw-ws && sh sam.sh -s "stage" -r "us-east-1" && cd ..
 cd 4.gw-fleet && sh cf.sh -s "stage" -r "us-east-1" && cd ..
 
 aws cloudformation delete-stack --stack-name gw-fleet-stage --region us-east-1
 aws cloudformation delete-stack --stack-name gw-ws-stage --region us-east-1
-aws cloudformation delete-stack --stack-name gw-rest-stage --region us-east-1
+aws cloudformation delete-stack --stack-name gw-http-stage --region us-east-1
 aws cloudformation delete-stack --stack-name gw-pre-stage --region us-east-1
