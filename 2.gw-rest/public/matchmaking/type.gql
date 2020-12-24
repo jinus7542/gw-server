@@ -1,0 +1,38 @@
+# matchmaking
+
+type PlayerInfo {
+  PlayerId: String!
+}
+
+type MatchStatus {
+  IpAddress: String!
+  Port: Int!
+  PlayerSessionId: String!
+  DnsName: String!
+}
+
+type MatchmakingTicket {
+  TicketId: String!
+  Status: String!
+  Players: [PlayerInfo]!
+}
+
+type GameSession {
+  PlayerSessionId: String!
+  PlayerId: String!
+  GameSessionId: String!
+  FleetId: String!
+  CreationTime: String!
+  Status: String!
+  IpAddress: String!
+  Port: Int!
+}
+
+extend type Query {
+  matchstatus(ticketId: String!): MatchStatus!
+}
+
+extend type Mutation {
+  matchmaking: MatchmakingTicket!
+  gamesession: GameSession!
+}

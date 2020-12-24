@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Prerequirements
+
+Parameters:
+  stage:
+    Type: String
+  stack:
+    Type: String
+
+Resources:
+  # Role for the instances (to access CloudWatch)
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${stack}-instance-role-${stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+                - "gamelift.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+  RootInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - Ref: "InstanceRole"
+
+  # Creates a federeated Identity pool
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: !Sub "${stack}-identity-pool-${stage}"
+      AllowUnauthenticatedIdentities: true
+      # www.amazon.com: "amzn1.application-oa2-client.188a56d827a7d6555a8b67a5d",
+      # graph.facebook.com: "7346241598935555",
+      # accounts.google.com: "123456789012.apps.googleusercontent.com",
+      # appleid.apple.com: "com.serviceid.auth",
+      # api.twitter.com: "xvz1evFS4wEEPTGEFPHBog;kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw",
+      # www.digits.com: "xvz1evFS4wEEPTGEFPHBog;kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw"
+      SupportedLoginProviders:
+        graph.facebook.com: "348471839757231"
+  # Create a role for unauthorized acces to AWS resources. Very limited access. Only allows users in the previously created Identity Pool
+  CognitoUnAuthorizedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${stack}-cognito-unauthorized-role-${stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: "cognito-identity.amazonaws.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": unauthenticated
+      Policies:
+        - PolicyName: "CognitoUnauthorizedPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "cognito-sync:*"
+                  - "execute-api:Invoke"
+                Resource: "arn:aws:execute-api:*:*:*" #NOTE: This could be more strict and only allow access to the specific backend API
+  # Create a role for authorized acces to AWS resources. Control what your user can access. This example only allows Lambda invokation
+  # Only allows users in the previously created Identity Pool
+  CognitoAuthorizedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${stack}-cognito-authorized-role-${stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: "cognito-identity.amazonaws.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": authenticated
+      Policies:
+        - PolicyName: "CognitoAuthorizedPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "cognito-sync:*"
+                  - "execute-api:Invoke"
+                #NOTE: This could be more strict and only allow access to the specific backend API
+                Resource: "arn:aws:execute-api:*:*:*"
+  # Assigns the roles to the Identity Pool
+  IdentityPoolRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthorizedRole.Arn
+        unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
+
+Outputs:
+  InstanceRole:
+    Value: !GetAtt InstanceRole.Arn
+    Export:
+      Name: !Sub "${stack}-instance-role-${stage}"
+  IdentityPoolID:
+    Value: !Ref IdentityPool
+    Export:
+      Name: !Sub "${stack}-identity-pool-${stage}"

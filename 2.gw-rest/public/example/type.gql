@@ -1,0 +1,15 @@
+# user
+
+type User {
+  id: Int!
+  name: String!
+}
+
+extend type Query {
+  signin(id: Int!): User!
+  signout(id: Int!): User!
+}
+
+extend type Mutation {
+  signup(id: Int!, name: String!): User!
+}

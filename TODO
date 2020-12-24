@@ -1,0 +1,38 @@
+------------------------------------------------------------------------------------------------
+My Info API
+	- Region
+	- cognitoIdentityPoolId
+------------------------------------------------------------------------------------------------
+FaceBook AppID: 348471839757231
+user
+	name: 이진우
+	id: 2674914232822967
+
+EAAE87uw5E68BAOS7ww81BcOqYNBrwtinXzS2rGgs7srnUA2bR8OXIbyZBI2UpvYP01RMtHPObsaPrzEPDTQ1WuRsWWT6ESBWFAjBMU16p3F3bxZAXGhezYUJ7ZAtbi5SRZBncoGDhYNnemLCNU1K3phM0AClEcpfIdThkZCLg9gZDZD
+
+cognitoAuthenticationType: 'unauthenticated'
+cognitoAuthenticationProvider: null
+cognitoIdentityId: 'us-east-1:af14f62e-7e1a-41c1-98b7-4be3c9e8a3ea'
+
+cognitoAuthenticationType: 'authenticated'
+cognitoAuthenticationProvider: 'graph.facebook.com,graph.facebook.com:348471839757231:2674914232822967'
+TODO:: Provider Name, App ID 지원여부 확인
+
+unity-chat(editor)
+	us-east-1:435df620-9eba-4b74-b776-25d2f0e51b82
+unity-chat(exe)
+	us-east-1:a2058818-4fb9-4948-b06e-ca0adf86619f
+unity-example(exe)
+	us-east-1:af14f62e-7e1a-41c1-98b7-4be3c9e8a3ea
+unity-example(editor)
+	us-east-1:cfc7f49c-a858-4bd8-8ecb-305b0d3e5388
+------------------------------------------------------------------------------------------------
+* AWS Cognito - Federated Identities
+
+Unauthenticated identities (인증되지 않은 자격 증명, Guest로 사용가능)
+Authentication providers (인증 공급자)
+	- Facebook
+	- Google+
+	- Twitter/Digits
+// "인증 공급자"로 인증된 디바이스는 "인증되지 않은 자격 증명"으로 인증 불가
+------------------------------------------------------------------------------------------------

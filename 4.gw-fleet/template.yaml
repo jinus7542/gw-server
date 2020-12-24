@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: GameLift Fleet
+
+Parameters:
+  stage:
+    Type: String
+  stack:
+    Type: String
+  buildid:
+    Type: String
+  pre:
+    Type: String
+    Default: "gw-pre"
+
+Resources:
+  MatchmakingRuleSet:
+    Type: AWS::GameLift::MatchmakingRuleSet
+    Properties:
+      Name: !Sub "${stack}-ruleset-${stage}"
+      RuleSetBody: !Sub |
+        {
+            "name": "simplerule",
+            "ruleLanguageVersion": "1.0",
+            "playerAttributes": [{
+                "name": "skill",
+                "type": "number",
+                "default": 10
+            }],
+            "teams": [{
+                "name": "oneteam",
+                "maxPlayers": 10,
+                "minPlayers": 4
+            }],
+            "rules": [{
+                "name": "FairSkill",
+                "description": "The average skill of players is within 10 points from the average skill of all players in the match",
+                "type": "distance",
+                // get skill value for each player
+                "measurements": [ "teams[oneteam].players.attributes[skill]" ],
+                // get skill values for all players and average to produce an overall average
+                "referenceValue": "avg(teams[oneteam].players.attributes[skill])",
+                "maxDistance": 10
+            }],
+            "expansions": [{
+                "target": "teams[oneteam].minPlayers",
+                "steps": [{
+                    "waitTimeSeconds": 10,
+                    "value": 2
+                }]
+            }]
+        }
+
+  # Queue to pass sessions to the fleet through the alias
+  GameSessionQueue:
+    Type: AWS::GameLift::GameSessionQueue
+    Properties:
+      Name: !Sub "${stack}-queue-${stage}"
+      TimeoutInSeconds: 50
+      Destinations:
+        # DestinationArn can be either an Alias arn or Fleet arn that you own
+        - DestinationArn: !Join
+            - ""
+            - - "arn:aws:gamelift:"
+              - !Ref "AWS::Region"
+              - "::alias/"
+              - !Ref Alias
+      # Optional player latency policies
+      #PlayerLatencyPolicies:
+      #  - MaximumIndividualPlayerLatencyMilliseconds: 1000
+      #    PolicyDurationSeconds: 60
+
+  # Configuration that uses the rule set
+  MatchmakingConfiguration:
+    Type: AWS::GameLift::MatchmakingConfiguration
+    Properties:
+      Name: !Sub "${stack}-configuration-${stage}"
+      AcceptanceRequired: false
+      AdditionalPlayerCount: 0
+      RequestTimeoutSeconds: 25
+      BackfillMode: "MANUAL"
+      # Just some example properties
+      GameProperties:
+        - Key: "gamemode"
+          Value: "classic"
+      GameSessionQueueArns:
+        - !GetAtt GameSessionQueue.Arn
+      RuleSetName: !Ref MatchmakingRuleSet
+
+  Fleet:
+    Type: AWS::GameLift::Fleet
+    Properties:
+      Name: !Sub "${stack}-${stage}"
+      BuildId:
+        Ref: "buildid"
+      # Run 2 game servers in different ports with different log files
+      RuntimeConfiguration:
+        GameSessionActivationTimeoutSeconds: 300
+        MaxConcurrentGameSessionActivations: 1
+        ServerProcesses:
+          - ConcurrentExecutions: 1
+            LaunchPath: /local/game/server.x86_64
+            Parameters: -logFile /local/game/logs/1935.log -port 1935
+          - ConcurrentExecutions: 1
+            LaunchPath: /local/game/server.x86_64
+            Parameters: -logFile /local/game/logs/7777.log -port 7777
+      EC2InstanceType: "t2.medium"
+      # We want exactly one instance (no scaling allowed in the example)
+      DesiredEC2Instances: "1"
+      #Create TLS certificate for optional encrypted client-server traffic
+      CertificateConfiguration:
+        CertificateType: GENERATED
+      InstanceRoleARN:
+        Fn::ImportValue: !Sub "${pre}-instance-role-${stage}"
+      #Allow TCP inbound access to our game servers
+      EC2InboundPermissions:
+        - FromPort: "1935"
+          ToPort: "1935"
+          IpRange: "0.0.0.0/0"
+          Protocol: "TCP"
+        - FromPort: "7777"
+          ToPort: "7777"
+          IpRange: "0.0.0.0/0"
+          Protocol: "TCP"
+
+  # Alias that references the fleet
+  Alias:
+    Type: AWS::GameLift::Alias
+    Properties:
+      Name: !Sub "${stack}-alias-${stage}"
+      RoutingStrategy:
+        Type: SIMPLE
+        FleetId: !Ref Fleet
