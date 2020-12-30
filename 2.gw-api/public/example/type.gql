@@ -8,6 +8,7 @@ type User {
 extend type Query {
   signin(id: Int!): User!
   signout(id: Int!): User!
+  friends: [User]!
 }
 
 extend type Mutation {

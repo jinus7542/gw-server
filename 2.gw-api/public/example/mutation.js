@@ -8,8 +8,8 @@ async function signup(parent, args, ctx, info) {
 
   assert.throw(
     0 <= args.id,
-    "invalid arguments",
-    "INVALID_ARGUMENTS",
+    "invalid parameters",
+    "INVALID_PARAMETERS",
     { id: args.id },
   );
 

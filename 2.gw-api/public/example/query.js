@@ -8,7 +8,9 @@ async function signin(parent, args, ctx, info) {
 
   assert.throw(
     0 <= args.id,
-    "invalid arguments",
+    "invalid parameters",
+    "INVALID_PARAMETERS",
+    { id: args.id },
   );
 
   return {
@@ -23,8 +25,8 @@ async function signout(parent, args, ctx, info) {
 
   assert.throw(
     0 <= args.id,
-    "invalid arguments",
-    "INVALID_ARGUMENTS",
+    "invalid parameters",
+    "INVALID_PARAMETERS",
     { id: args.id },
   );
 
@@ -34,7 +36,19 @@ async function signout(parent, args, ctx, info) {
   };
 }
 
+async function friends(parent, args, ctx, info) {
+  const event = ctx.event;
+  const context = ctx.context;
+
+  return [
+    { id: 2222, name: "kangkang" },
+    { id: 3333, name: "dokki" },
+    { id: 4444, name: "hogu2" },
+  ];
+}
+
 module.exports = {
   signin,
   signout,
+  friends,
 };
