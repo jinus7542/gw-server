@@ -4,6 +4,7 @@ Description: GameLift Fleet
 Parameters:
   stage:
     Type: String
+    AllowedValues: [stage, prod]
   stack:
     Type: String
   buildid:

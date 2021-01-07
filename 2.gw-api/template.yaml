@@ -1,10 +1,11 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: Http API
+Description: REST API
 
 Parameters:
   stage:
     Type: String
+    AllowedValues: [stage, prod]
   stack:
     Type: String
   fleet:
@@ -27,6 +28,7 @@ Resources:
     Properties:
       Name: !Sub ${stack}-${stage}
       StageName: !Sub ${stage}
+      Description: REST API
       # Authenticate users with IAM (Cognito identities)
       Auth:
         DefaultAuthorizer: AWS_IAM

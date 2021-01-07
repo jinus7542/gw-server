@@ -5,6 +5,7 @@ Description: WebSocket Broker
 Parameters:
   stage:
     Type: String
+    AllowedValues: [stage, prod]
   stack:
     Type: String
   runtime:
@@ -23,6 +24,7 @@ Resources:
     Properties:
       Name: !Sub ${stack}-${stage}
       ProtocolType: WEBSOCKET
+      Description: WebSocket Broker
       RouteSelectionExpression: "$request.body.action"
 
   ExecuteApiPolicy:
