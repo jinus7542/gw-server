@@ -4,7 +4,7 @@ Description: Prerequirements
 Parameters:
   stage:
     Type: String
-    AllowedValues: [stage, prod]
+    AllowedValues: ["stage", "prod"]
   stack:
     Type: String
 
