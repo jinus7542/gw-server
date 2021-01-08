@@ -7,7 +7,7 @@ async function main(event, context) {
 
   try {
     response.body = "Data sent.";
-    console.log(response);
+    console.log(JSON.stringify(event.Records));
   } catch (error) {
     console.log(error);
     response.statusCode = 500;
